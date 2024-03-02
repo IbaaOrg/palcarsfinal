@@ -29,7 +29,9 @@ class UserController extends Controller
             'description' => 'nullable',
             'role' => 'required|in:Admin,Renter,Company',
         ], [
-            'password.required'=>'password must contain at least one uppercase letter and one lowercase letter and one special character to register.',
+            'name.regex'=>'your name can only contain letters',
+            'password.regex'=>'The password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            'phone.regex'=>'The phone number must contain 10 digits start with "05"',
             'birthdate.before_or_equal' => 'You must be 18 years old or older to register.',
         ]);
     
@@ -68,6 +70,8 @@ class UserController extends Controller
             'description' => $request->description,
             'role' => $request->role,
         ]);
+        $token=$user->createToken("TokenUser")->plainTextToken;
+        $user->token=$token;
         $user->photo_user=url($user->photo_user);
         $user->photo_drivinglicense=url($user->photo_drivinglicense);
         return $this->Success($user);
@@ -76,8 +80,11 @@ class UserController extends Controller
     public function login(Request $request){
         $email=$request->email;
         $password=$request->password;
+        
         if(Auth::attempt(['email'=>$email,'password'=>$password])){
             $user=Auth::user();
+            $token=$user->createToken("TokenUser")->plainTextToken;
+            $user->token=$token;
             return $this->success($user);
         }
 
