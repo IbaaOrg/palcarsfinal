@@ -20,8 +20,8 @@ return new class extends Migration
             $table->rememberToken();
             $table->string('phone');
             $table->string('photo_user')->nullable();
-            $table->string('photo_drivinglicense');
-            $table->date('birthdate');
+            $table->string('photo_drivinglicense')->nullable();
+            $table->date('birthdate')->nullable();
             $table->text('description')->nullable();
             $table->enum('role',['Admin','Renter','Company']);
             $table-> boolean('active')->default(1);

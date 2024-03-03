@@ -49,4 +49,13 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+    public function isAdmin(){
+        return $this->role=="Admin";
+    }
+    public function isRenter(){
+        return $this->role=="Renter";
+    }
+    public function isCompany(){
+        return $this->role=="Company";
+    }
 }

@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Traits\ResponseTrait;
+use App\Http\Resources\AuthResource;
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -19,19 +21,19 @@ class UserController extends Controller
       
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|min:3|regex:/^[\pL\s\-]+$/u',
-            'email' => 'required|email|unique:users',
+            'name' => 'required|unique:users|min:3|regex:/^[\pL\s\-]+$/u',
+            'email' => 'required|email:rfc,dns|unique:users',
             'password' => 'required|string|min:8|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/|regex:/[@$!%*?&]/',
             'phone' => 'required|numeric|regex:/^05[0-9]{8}$/',
             'photo_user' => 'nullable|image|mimes:jpeg,png,jpg,gif',
-            'photo_drivinglicense' => 'required|image|mimes:jpeg,png,jpg,gif',
-            'birthdate' => 'required|date|before_or_equal:' . Carbon::now()->subYears(18)->format('Y-m-d'),
+            'photo_drivinglicense' => $request->role === 'Renter'?'required|image|mimes:jpeg,png,jpg,gif':'nullable|image|mimes:jpeg,png,jpg,gif',
+            'birthdate' => $request->role === 'Renter' ? 'required|date|before_or_equal:' . Carbon::now()->subYears(18)->format('Y-m-d') : 'nullable|date|before_or_equal:' . Carbon::now()->subYears(18)->format('Y-m-d'),
             'description' => 'nullable',
             'role' => 'required|in:Admin,Renter,Company',
         ], [
             'name.regex'=>'your name can only contain letters',
             'password.regex'=>'The password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
-            'phone.regex'=>'The phone number must contain 10 digits start with "05"',
+            'phone.regex'=>'The phone number must contain 10 digits start with (05)',
             'birthdate.before_or_equal' => 'You must be 18 years old or older to register.',
         ]);
     
@@ -39,7 +41,7 @@ class UserController extends Controller
             $msg = $validator->errors()->first();
             return $this->Fail($msg, '404');
         }
-    
+       
         // Process photo_user
         if ($request->hasFile('photo_user')) {
             $file_user = $request->file('photo_user');
@@ -52,10 +54,16 @@ class UserController extends Controller
         }
     
         // Process photo_drivinglicense
-        $file_drivinglicense = $request->file('photo_drivinglicense');
-        $fileName_drivinglicense = "DrivinglicenseIMG_" . rand(1000, 9999) . "." . $file_drivinglicense->getClientOriginalExtension();
-        $path_drivinglicense = $file_drivinglicense->storeAs('images/users', $fileName_drivinglicense, 'public');
-        $photo_drivinglicense = Storage::url($path_drivinglicense);
+        if ($request->hasFile('photo_drivinglicense')) {
+            $file_drivinglicense = $request->file('photo_drivinglicense');
+            $fileName_drivinglicense = "DrivinglicenseIMG_" . rand(1000, 9999) . "." . $file_drivinglicense->getClientOriginalExtension();
+            $path_drivinglicense = $file_drivinglicense->storeAs('images/users', $fileName_drivinglicense, 'public');
+            $photo_drivinglicense = Storage::url($path_drivinglicense);
+        } else {
+            // Set default photo_user if no image is uploaded
+            $photo_drivinglicense = null;
+        }
+       
     
     
         // Create new user
@@ -72,9 +80,8 @@ class UserController extends Controller
         ]);
         $token=$user->createToken("TokenUser")->plainTextToken;
         $user->token=$token;
-        $user->photo_user=url($user->photo_user);
-        $user->photo_drivinglicense=url($user->photo_drivinglicense);
-        return $this->Success($user);
+      
+        return $this->Success(new UserResource($user));
 
     }
     public function login(Request $request){
@@ -84,8 +91,8 @@ class UserController extends Controller
         if(Auth::attempt(['email'=>$email,'password'=>$password])){
             $user=Auth::user();
             $token=$user->createToken("TokenUser")->plainTextToken;
-            $user->token=$token;
-            return $this->success($user);
+            $user->token=$token; 
+            return $this->success(new AuthResource($user));
         }
 
         return $this->fail( 'Invalid email or password.',403);
@@ -100,6 +107,8 @@ class UserController extends Controller
     public function index(Request $request)
     {
         //
+        $request->photo_user=url($request->photo_user);
+        $request->photo_drivinglicense=url($request->photo_drivinglicense);
         return User::all();
     }
 
