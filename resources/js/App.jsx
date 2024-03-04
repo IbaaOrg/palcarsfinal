@@ -1,10 +1,11 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import Dashbord from "./Pages/Dashbord/Dashbord";
 const App = () => {
     return (
         <div>
             
-            <h1>Home page</h1>
+            <Dashbord/>
         </div>
 
 

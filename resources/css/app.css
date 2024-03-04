@@ -1,0 +1,17 @@
+/* .sidebar{
+    width: 220px;
+} */
+
+.list-group a:hover {
+    background-color: #3563E9;
+    color: white;
+    border-radius: 10px;
+}
+.Home{
+    width: 100%;
+    padding: 0;
+}
+.view{
+    padding: 0 !important;
+    margin: 0 !important;
+}
