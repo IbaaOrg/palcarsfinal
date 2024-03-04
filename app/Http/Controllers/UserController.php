@@ -9,6 +9,7 @@ use App\Http\Traits\ResponseTrait;
 use App\Http\Resources\AuthResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\AllUserResource;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -107,9 +108,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         //
-        $request->photo_user=url($request->photo_user);
-        $request->photo_drivinglicense=url($request->photo_drivinglicense);
-        return User::all();
+        return $this->success(AllUserResource::collection(User::all()));
     }
 
     /**
@@ -126,6 +125,7 @@ class UserController extends Controller
     public function show(string $id)
     {
         //
+        return $this->success(new AllUserResource(User::find($id)));
     }
 
     /**
