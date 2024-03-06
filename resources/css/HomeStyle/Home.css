@@ -1,0 +1,46 @@
+* {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.maindiv {
+    margin-top: 1% !important;
+    margin: 5%;
+
+}
+
+.img {
+    width: 100%;
+    border-radius: 10px;
+}
+
+.plantrip {
+    margin-top: 5%;
+}
+
+.item {
+    margin: 5px;
+    /* Adjust margin as needed */
+    background-color: #f9f9f9;
+    padding: 10px;
+}
+
+@media screen and (max-width: 1000px) {
+    .item {
+        width: calc(70% - 10px);
+        /* 50% width for each item with 10px margin in between */
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .item {
+        width: calc(50% - 10px);
+        /* 50% width for each item with 10px margin in between */
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .item {
+        width: calc(33.33% - 10px);
+        /* 33.33% width for each item with 10px margin in between */
+    }
+}
