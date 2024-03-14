@@ -1,17 +1,27 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
+use App\Http\Traits\ResponseTrait;
+use Illuminate\Support\Facades\Auth;
 
 class CarController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    use ResponseTrait;
+    public function index(Request $request)
     {
         //
+        $user=Auth::user();
+        if ($user) {
+            // User is authenticated
+            return response()->json(['user' => $user], 200);
+        } else {
+            // User is not authenticated
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
     }
 
     /**
@@ -20,6 +30,9 @@ class CarController extends Controller
     public function store(Request $request)
     {
         //
+        
+    
+
     }
 
     /**

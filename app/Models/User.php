@@ -3,10 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Car;
+use App\Models\User;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -58,4 +60,17 @@ class User extends Authenticatable
     public function isCompany(){
         return $this->role=="Company";
     }
+    //cars for company
+    public function cars(){
+        return $this->hasMany(Car::class);
+    }
+    //rented car 
+    public function rentedCar(){
+        return $this->hasOne(Car::class);
+    }
+    // //all rentals
+    // public function rentals()
+    // {
+    //     return $this->hasMany(Rental::class);
+    // }
 }

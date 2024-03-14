@@ -9,9 +9,11 @@ use App\Http\Traits\ResponseTrait;
 use App\Http\Resources\AuthResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use App\Http\Resources\AllUserResource;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\UpdateUserResource;
 
 class UserController extends Controller
 {
@@ -128,19 +130,74 @@ class UserController extends Controller
         return $this->success(new AllUserResource(User::find($id)));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $user = User::find($id);
+        if (!$user) {
+            return $this->fail('User not found', 404);
+        }
+    
+       
+    
+        // Prepare data for update
+        $data = [
+            'name' => $request->input('name', $user->name),
+            'email' => $request->input('email', $user->email),
+            'phone' => $request->input('phone', $user->phone),
+            'birthdate' => $request->input('birthdate', $user->birthdate),
+            'active' => $request->input('active', $user->active), // Only set if the logged-in user is an admin
+        ];
+    
+        // Process photo_user
+        if ($request->hasFile('photo_user')) {
+            $file_user = $request->file('photo_user');
+            $fileName_user = "UserIMG_" . rand(1000, 9999) . "." . $file_user->getClientOriginalExtension();
+            $path_user = $file_user->storeAs('images/users', $fileName_user, 'public');
+            $data['photo_user'] = Storage::url($path_user);
+    
+            // Delete old photo_user
+            if ($user->photo_user) {
+                $oldPhotoPath = public_path($user->photo_user);
+                if (File::exists($oldPhotoPath)) {
+                    File::delete($oldPhotoPath);
+                }
+            }
+        }
+    
+        // Process photo_drivinglicense
+        if ($request->hasFile('photo_drivinglicense')) {
+            $file_drivinglicense = $request->file('photo_drivinglicense');
+            $fileName_drivinglicense = "DrivinglicenseIMG_" . rand(1000, 9999) . "." . $file_drivinglicense->getClientOriginalExtension();
+            $path_drivinglicense = $file_drivinglicense->storeAs('images/users', $fileName_drivinglicense, 'public');
+            $data['photo_drivinglicense'] = Storage::url($path_drivinglicense);
+    
+            // Delete old photo_drivinglicense if exists
+            if ($user->photo_drivinglicense) {
+                $oldPhotoPath = public_path($user->photo_drivinglicense);
+                if (File::exists($oldPhotoPath)) {
+                    File::delete($oldPhotoPath);
+                }
+            }
+        }
+    
+        // Update user data
+        $user->update($data);
+    
+        return $this->success($user);
     }
-
+    
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
         //
+    $user=User::find($id);
+    if($user){
+    $user->delete();
+    return $this->success("successfully deleted");
+    }
+return $this->fail('user not found',404);
+
     }
 }
