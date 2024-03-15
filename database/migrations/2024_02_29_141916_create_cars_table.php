@@ -13,16 +13,16 @@ return new class extends Migration
     {
         Schema::create('cars', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('car_number')->unique();
+            $table->string('car_number')->unique();
             $table->string('make',50);
-            $table->string('model',150);
+            $table->string('model',150)->nullable();
             $table->enum('catrgory', array('SUV','Hatchback','Sedan','Convertible','Crossover','Station Wagon','Minivan','Pickup trucks')); 
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->year('year');
             $table->tinyInteger('seats');
             $table->enum('doors', array('2','3','4'));
-            $table->tinyInteger('bags');
-            $table->smallInteger('fuel_full');
+            $table->tinyInteger('bags')->nullable();
+            $table->smallInteger('fuel_full')->nullable();
             $table->enum('fuel_type',array('gas', 'diesel', 'electricity'));
             $table->enum('steering',array('Automatic', 'Manual'));
             $table->foreignId('price_id')->constrained(); 

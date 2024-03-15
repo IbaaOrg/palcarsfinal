@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ColorController;
+use App\Http\Controllers\PriceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,4 +40,8 @@ Route::post('/colors',[ColorController::class,'store']);
 Route::get('/colors',[ColorController::class,'index']);
 Route::delete('/colors/{id}',[ColorController::class,'destroy']);
 Route::post('/colors/{id}',[ColorController::class,'update']);
+Route::post('/prices',[PriceController::class,'store']);
+Route::post('/password_forget',[UserController::class,'forgetPassword']);
+Route::post('/password_reset',[UserController::class,'resetPassword']);
+Route::middleware('auth:sanctum')->post('/addcar',[CarController::class,'store']);
 ?>

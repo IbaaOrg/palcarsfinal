@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Price;
 use Illuminate\Http\Request;
+use App\Http\Traits\ResponseTrait;
 
 class PriceController extends Controller
 {
+    use ResponseTrait;
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         //
+     $price=Price::all();
+     return $this->success($price);
     }
 
     /**
@@ -20,6 +25,10 @@ class PriceController extends Controller
     public function store(Request $request)
     {
         //
+        $price=Price::create([
+            'price'=>$request->price,
+        ]);
+        return $this->success($price);
     }
 
     /**

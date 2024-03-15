@@ -4,12 +4,18 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\User;
+use forgetPasswordMail;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\ResetPassword;
 use App\Http\Traits\ResponseTrait;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\URL;
 use App\Http\Resources\AuthResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\AllUserResource;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -42,7 +48,7 @@ class UserController extends Controller
     
         if ($validator->fails()) {
             $msg = $validator->errors()->first();
-            return $this->Fail($msg, '404');
+            return $this->fail($msg, '400');
         }
        
         // Process photo_user
@@ -84,7 +90,7 @@ class UserController extends Controller
         $token=$user->createToken("TokenUser")->plainTextToken;
         $user->token=$token;
       
-        return $this->Success(new UserResource($user));
+        return $this->success(new UserResource($user));
 
     }
     public function login(Request $request){
@@ -199,5 +205,132 @@ class UserController extends Controller
     }
 return $this->fail('user not found',404);
 
+    }
+    // public function forgetPassword(Request $request){
+    //     try {
+    //         $user=User::where('email',$request->email)->get();
+    //         if(count($user)>0){
+    //             $token=Str::random(40);
+    //             $domain=URL::to('/');
+    //             $url=$domain.'/password_reset?token='.$token;
+
+    //             $data['url']=$url;
+    //             $data['email']=$request->email;
+    //             $data['title']="Password Reset";
+    //             $data['body']="Please click on below link to reset your password!";
+
+    //             Mail::send('forgetPasswordMail',['data'=>$data],function($message)use($data){
+    //                 $message->to($data['email'])->subject($data['title']);
+
+    //             });
+
+    //             $datetime=Corbon::now()->format('Y-m-d H:i:s');
+
+    //             ResetPassword::updateOrCreate(
+    //                 ['email'=>$request->email],
+    //                 [
+    //                     'email'=>$request->email,
+    //                     'token'=>$token,
+    //                     'created_at'=>$datetime
+    //                 ]
+    //             );
+    //             return $this->success('Please check your mail to reset password');
+
+    //         }else {
+    //             return $this->fail('user not found',401);
+    //         }
+    //     }catch(Exception $e){
+    //         return $this->fail($e->getMessage(),401);
+    //     }
+    // }
+    public function forgetPassword(Request $request)
+    {
+        try {
+            // Check if user exists
+            $user = User::where('email', $request->email)->firstOrFail();
+    
+            // Generate a secure token
+            $token = Str::random(60);
+    
+            // Generate password reset URL
+            $url = URL::to('/password_reset?token=' . $token);
+            $data['url']=$url;
+            $data['email']=$request->email;
+            $data['title']="Password Reset";
+            $data['body']="Please click on the link below to reset your password.";
+            // Send password reset email
+            Mail::send('forgetPasswordMail',['data'=>$data], function ($message) use ($request) {
+                $message->to($request->email)->subject("Password Reset");
+            });
+    
+            // Save token in database
+            ResetPassword::updateOrCreate(
+                ['email' => $request->email],
+                ['token' => $token]
+            );
+    
+            return $this->success('Please check your email to reset your password.');
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage(), 401);
+        }
+    }
+    // public function resetPassword(Request $request){
+    //    $validator= $validator = Validator::make($request->all(),
+    //         [
+    //             'password'=>'required|string|min:8|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/|regex:/[@$!%*?&]/|confirmed'
+    //         ]
+    //         );
+    //         if($validator->fails()){
+    //             $msg = $validator->errors()->first();
+
+    //             return $this->fail($msg,400);
+    //         }
+
+    //     $user=User::find($request->id);
+    //     $user->password=$request->password;
+    //     $user->save();
+    //     ResetPassword::where('email',$user->email)->delete();
+  
+    //     return $this->success($user);
+    // }
+    public function resetPassword(Request $request)
+    {
+        // Validate request data
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string|min:8',
+            'token' => 'required|string',
+        ]);
+
+        // Return validation errors if any
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 400);
+        }
+
+        // Find user by email
+        $user = User::where('email', $request->email)->first();
+
+        // Check if user exists
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        // Verify password reset token
+        $resetPassword = ResetPassword::where('email', $request->email)
+            ->where('token', $request->token)
+            ->first();
+
+        if (!$resetPassword) {
+            return response()->json(['error' => 'Invalid or expired token'], 400);
+        }
+
+        // Update user password
+        $user->password = $request->password;
+        $user->save();
+
+        // Delete password reset token from database
+        $resetPassword->delete();
+
+        return response()->json(['message' => 'Password reset successfully'], 200);
     }
 }
